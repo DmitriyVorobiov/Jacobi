@@ -19,6 +19,7 @@
     <s:textfield label="b" name="b" value="1"/>
     <s:textfield label="g" name="g" value="0.5"/>
     <s:textfield label="d" name="d" value="0.02"/>
+    <s:textfield label="привет" value="ку"/>
     <s:submit value="Calculate"/>
 </s:form>
 
