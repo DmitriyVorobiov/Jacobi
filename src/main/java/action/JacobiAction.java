@@ -11,6 +11,8 @@ public class JacobiAction extends ActionSupport {
     private String b;
     private String g;
     private String d;
+    private Exception exception;
+
 
     public String execute() {
         int k = Integer.valueOf(getK());
@@ -62,5 +64,13 @@ public class JacobiAction extends ActionSupport {
 
     public void setD(String d) {
         this.d = d;
+    }
+
+    public void setException(Exception exception) {
+        this.exception = exception;
+    }
+
+    public Exception getException() {
+        return exception;
     }
 }

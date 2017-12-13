@@ -12,11 +12,11 @@
     <package name="default" extends="struts-default">
 
         <action name="JacobiAction" class="action.JacobiAction">
+            <exception-mapping exception="java.lang.NumberFormatException" result="error"/>
             <result name="input">/greeting.jsp</result>
-            <result name="success">/greeting.jsp</result>
+            <result name = "success">greeting.jsp</result>
+            <result name="error">greeting.jsp</result>
         </action>
 
     </package>
-
-
 </struts>
