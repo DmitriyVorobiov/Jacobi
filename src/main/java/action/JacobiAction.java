@@ -13,10 +13,10 @@ public class JacobiAction extends ActionSupport {
     private String d;
 
     public String execute() {
-        int k = 6;
-        int b = 1;
-        double g = 0.5;
-        double d = 0.02;
+        int k = Integer.valueOf(getK());
+        int b = Integer.valueOf(getB());
+        double g = Double.valueOf(getG());
+        double d =Double.valueOf(getD());
         Complex func;
         Ortho jacobi = new Jacobi3();
         Ortho.Threshold data = jacobi.calc_dw_and_n(Double.valueOf(d), Integer.valueOf(k), Integer.valueOf(b), Double.valueOf(g));

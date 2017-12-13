@@ -16,7 +16,6 @@
             <result name="success">/greeting.jsp</result>
         </action>
 
-
     </package>
 
 
