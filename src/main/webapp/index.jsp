@@ -1,11 +1,16 @@
 <%@ page  contentType="text/html; charset=UTF-8" %>
 <%@ taglib prefix="s" uri="/struts-tags" %>
 <%@ taglib prefix="sb" uri="/struts-bootstrap-tags" %>
+<%@ taglib prefix="sx" uri="/struts-dojo-tags" %>
+<%@ taglib prefix="sj" uri="/struts-jquery-tags"%>
+
 <html>
 <head class="head">
     <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
     <title>Jacobi</title>
     <sb:head/>
+    <sx:head/>
+    <sj:head/>
     <style>
         table.tabulation {
             font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
@@ -121,6 +126,7 @@
 <body class="body">
 
 <s:url action="JacobiAction"> </s:url>
+<s:url action="filedownload" > </s:url>
 
 
 <br>
@@ -129,14 +135,24 @@
         class="action.JacobiAction" method="post"
         enctype="multipart/form-data">
     <s:property value="exception"/>
-
     <s:textfield cssClass="input" type="text"  label="k" name="k" value="6"/>
     <s:textfield cssClass="input" type="text" label="b" name="b" value="1"/>
     <s:textfield cssClass="input" type="text" label="g" name="g" value="0.5"/>
     <s:textfield cssClass="input" type="text" label="d" name="d" value="0.02"/>
-    <s:submit  cssClass="button" value="Calculate"/>
+    <s:submit
+            targets="result"
+            value="Calculate"
+            cssClass="button"
+    />
+
 </s:form>
 
+<div id="result">
+    <s:iterator value="timings"><s:label cssClass="text" value="Time,ms"/> <s:property/></s:iterator>
+    <div>
+        <s:a action="filedownload">RESULTS</s:a>
+    </div>
 
+</div>
 </body>
 </html>
