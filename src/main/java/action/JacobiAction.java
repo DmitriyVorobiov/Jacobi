@@ -43,8 +43,7 @@ public class JacobiAction extends ActionSupport {
         BufferedWriter bw = new BufferedWriter(fw);
         for (int i = 0; i <= data.N; i++) {
             func = jacobi.val(k, b, g, data.dw * i);
-            //System.out.println((func.Re + "; " + func.Im + ";\n").replace('.', ','));
-            bw.write((func.Re + "; " + func.Im + ";\n").replace('.', ','));
+            bw.write((func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
         }
         if (bw != null)
             bw.close();
