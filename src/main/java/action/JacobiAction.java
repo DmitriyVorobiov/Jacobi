@@ -2,6 +2,7 @@ package action;
 
 import jacobi.Complex;
 import jacobi.Jacobi3;
+import jacobi.Jacobi3Spark;
 import jacobi.Ortho;
 
 import java.io.*;
@@ -19,6 +20,7 @@ public class JacobiAction extends ActionSupport {
     private String b;
     private String g;
     private String d;
+    private String spark;
     private Exception exception;
     private ArrayList<Long> timings = new ArrayList<>();
     private File file;
@@ -30,8 +32,13 @@ public class JacobiAction extends ActionSupport {
         int b = Integer.valueOf(getB());
         double g = Double.valueOf(getG());
         double d =Double.valueOf(getD());
+        boolean spark = Boolean.parseBoolean(getSpark());
         Complex func;
-        Ortho jacobi = new Jacobi3();
+        Ortho jacobi;
+        if (spark)
+            jacobi = new Jacobi3Spark();
+        else
+            jacobi = new Jacobi3();
         stopWatch.start();
         Ortho.Threshold data = jacobi.calc_dw_and_n(d,k, b,g);
         stopWatch.stop();
@@ -89,6 +96,14 @@ public class JacobiAction extends ActionSupport {
 
     public void setD(String d) {
         this.d = d;
+    }
+
+    public String getSpark() {
+        return spark;
+    }
+
+    public void setSpark(String spark) {
+        this.spark = spark;
     }
 
     public void setException(Exception exception) {

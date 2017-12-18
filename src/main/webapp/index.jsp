@@ -87,8 +87,14 @@
             text-decoration: none;
             font-size: 16px;
         }
+        .tdLabel {
+            vertical-align:middle;
+        }
         .input{
-            padding: 10px;
+            padding-top: 2px;
+            padding-bottom: 2px;
+            padding-left: 10px;
+            padding-right: 10px;
             border: solid 2px #c9c9c9;
             transition: border 0.3s;
             height: 29px;
@@ -139,6 +145,7 @@
     <s:textfield cssClass="input" type="text" label="b" name="b" value="1"/>
     <s:textfield cssClass="input" type="text" label="g" name="g" value="0.5"/>
     <s:textfield cssClass="input" type="text" label="d" name="d" value="0.02"/>
+    <s:checkbox cssClass="input" type="checkbox" label="spark" name="spark" value="false"/>
     <s:submit
             targets="result"
             value="Calculate"
