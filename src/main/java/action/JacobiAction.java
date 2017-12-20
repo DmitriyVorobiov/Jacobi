@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class JacobiAction extends ActionSupport {
 
 
@@ -24,30 +25,31 @@ public class JacobiAction extends ActionSupport {
     private String spark;
     private Exception exception;
     private ArrayList<Long> timings = new ArrayList<>();
-    private File file;
     private ArrayList<Threshold> serialThresholds = new ArrayList<>();
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public String execute() throws IOException {
-        SparkConf conf = new SparkConf().setAppName("Jacobi").setMaster("local[*]");
-        JavaSparkContext jsc = new JavaSparkContext(SparkContext.getOrCreate(conf));
         int k = Integer.valueOf(getK());
         int b = Integer.valueOf(getB());
         double g = Double.valueOf(getG());
-        double d =Double.valueOf(getD());
-        long start = 0L,end = 0L;
+        double d = Double.valueOf(getD());
+        File file;
+        long start, end;
         boolean spark = Boolean.parseBoolean(getSpark());
         Complex func;
         Ortho jacobi = new Jacobi3();
         file = new File(DownloadResultsAction.FILENAME);
         if (!file.exists()) {
             file.createNewFile();
-        }else{
+        } else {
             file.delete();
             file.createNewFile();
         }
         FileWriter fw = new FileWriter(file.getName());
         BufferedWriter bw = new BufferedWriter(fw);
-        if(spark) {
+        if (spark) {
+            SparkConf conf = new SparkConf().setAppName("Jacobi").setMaster("local[*]");
+            JavaSparkContext jsc = new JavaSparkContext(SparkContext.getOrCreate(conf));
             ArrayList<Threshold> thresholdSparks = new ArrayList<>();
             for (int i = 0; i <= k; i++) {
                 Threshold threshold = new Threshold();
@@ -57,7 +59,7 @@ public class JacobiAction extends ActionSupport {
             JavaRDD<Threshold> thresholdSparkJavaRDD = jsc.parallelize(thresholdSparks);
             start = Instant.now().toEpochMilli();
             List<Threshold> result = thresholdSparkJavaRDD.map(threshold -> jacobi.getDwN(d, threshold.getK(), b, g)).collect();
-                    //.reduce((result, next) -> (result.addResult(next)));
+            //.reduce((result, next) -> (result.addResult(next)));
 
             end = Instant.now().toEpochMilli();
 
@@ -68,16 +70,16 @@ public class JacobiAction extends ActionSupport {
                     bw.write((func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
                 }
             }
-        }else{
+        } else {
             start = Instant.now().toEpochMilli();
 
-            for (int i=0;i<=k;i++){
+            for (int i = 0; i <= k; i++) {
                 serialThresholds.add(jacobi.getDwN(d, i, b, g));
             }
             end = Instant.now().toEpochMilli();//stopWatch.stop();
 
-            for (int i=0;i<=k;i++) {
-                bw.write("k = " + i+ "\r\n");
+            for (int i = 0; i <= k; i++) {
+                bw.write("k = " + i + "\r\n");
                 for (int j = 0; j <= serialThresholds.get(i).getN(); j++) {
                     func = jacobi.val(k, b, g, serialThresholds.get(i).getDw() * j);
                     bw.write((func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
@@ -86,12 +88,10 @@ public class JacobiAction extends ActionSupport {
 
         }
 
-        if (bw != null)
-            bw.close();
+        bw.close();
+        fw.close();
 
-        if (fw != null)
-            fw.close();
-        timings.add(end-start);
+        timings.add(end - start);
         return SUCCESS;
     }
 
