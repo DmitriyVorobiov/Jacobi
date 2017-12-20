@@ -70,9 +70,10 @@ public class JacobiAction extends ActionSupport {
         }*/
 
         for (Ortho.ThresholdSpark threshold : results.getRes()) {
+            bw.write("k = "+threshold.k+"\r\n");
             for (int i = 0; i <= threshold.N; i++) {
                 func = jacobi.val(threshold.k, b, g, threshold.dw * i);
-                bw.write(("k = "+threshold.k+"\r\n"+func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
+                bw.write((func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
             }
         }
 
