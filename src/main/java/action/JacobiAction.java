@@ -39,6 +39,8 @@ public class JacobiAction extends ActionSupport {
             jacobi = new Jacobi3Spark();
         else
             jacobi = new Jacobi3();
+        //TODO Нужно добавить параллеьное выполнение задач по К
+        //TODO MAP(K) FOREACH (K)->CALC REDUCE(DATA)
         stopWatch.start();
         Ortho.Threshold data = jacobi.calc_dw_and_n(d,k, b,g);
         stopWatch.stop();
