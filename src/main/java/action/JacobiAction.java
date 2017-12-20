@@ -45,6 +45,8 @@ public class JacobiAction extends ActionSupport {
             jacobi = new Jacobi3Spark();
         else
             jacobi = new Jacobi3();
+        //TODO Нужно добавить параллеьное выполнение задач по К
+        //TODO MAP(K) FOREACH (K)->CALC REDUCE(DATA)
         stopWatch.start();
 
         ArrayList<Ortho.ThresholdSpark> thresholdSparks = new ArrayList<>();
