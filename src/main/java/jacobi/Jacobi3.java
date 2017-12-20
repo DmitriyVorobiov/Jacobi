@@ -1,9 +1,11 @@
 package jacobi;
 
+import java.io.Serializable;
+
 /**
  * Created by Palladin on 28.11.2017.
  */
-public class Jacobi3 extends Ortho {
+public class Jacobi3 extends Ortho implements Serializable {
 
     public static double fi(int k, int p, double g, double w) {
         return Math.atan(2 * w / (2 * (k + p) + 1) * c * g);

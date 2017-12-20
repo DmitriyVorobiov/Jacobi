@@ -9,6 +9,10 @@ import java.io.*;
 
 import com.opensymphony.xwork2.ActionSupport;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.spark.SparkConf;
+import org.apache.spark.SparkContext;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
 
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
@@ -24,6 +28,8 @@ public class JacobiAction extends ActionSupport {
     private Exception exception;
     private ArrayList<Long> timings = new ArrayList<>();
     private File file;
+    private static SparkConf conf = new SparkConf().setAppName("Jacobi").setMaster("local");
+    private static JavaSparkContext jsc = new JavaSparkContext(SparkContext.getOrCreate(conf));
 
 
     public String execute() throws IOException {
@@ -40,7 +46,15 @@ public class JacobiAction extends ActionSupport {
         else
             jacobi = new Jacobi3();
         stopWatch.start();
-        Ortho.Threshold data = jacobi.calc_dw_and_n(d,k, b,g);
+
+        ArrayList<Ortho.ThresholdSpark> thresholdSparks = new ArrayList<>();
+        for (int i = 0; i <= k; i++) {
+            thresholdSparks.add(new Ortho.ThresholdSpark(i));
+        }
+        JavaRDD<Ortho.ThresholdSpark> thresholdSparkJavaRDD = jsc.parallelize(thresholdSparks);
+        Ortho.ThresholdSpark results = thresholdSparkJavaRDD.map(t -> jacobi.calc_dw_and_n(d, t.k, b, g))
+            .reduce((result, next) -> (((Ortho.ThresholdSpark)result).addResult(next)));
+        //Ortho.Threshold data = jacobi.calc_dw_and_n(d,k, b,g);
         stopWatch.stop();
         file=  new File(DownloadResultsAction.FILENAME);
         if (!file.exists()){
@@ -48,10 +62,18 @@ public class JacobiAction extends ActionSupport {
         }
         FileWriter fw =  new FileWriter(file.getName());
         BufferedWriter bw = new BufferedWriter(fw);
-        for (int i = 0; i <= data.N; i++) {
+        /*for (int i = 0; i <= data.N; i++) {
             func = jacobi.val(k, b, g, data.dw * i);
             bw.write((func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
+        }*/
+
+        for (Ortho.ThresholdSpark threshold : results.getRes()) {
+            for (int i = 0; i <= threshold.N; i++) {
+                func = jacobi.val(threshold.k, b, g, threshold.dw * i);
+                bw.write(("k = "+threshold.k+"\r\n"+func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
+            }
         }
+
         if (bw != null)
             bw.close();
 
