@@ -1,14 +1,10 @@
 package action;
 
-import jacobi.Complex;
-import jacobi.Jacobi3;
-import jacobi.Jacobi3Spark;
-import jacobi.Ortho;
+import jacobi.*;
 
 import java.io.*;
 
 import com.opensymphony.xwork2.ActionSupport;
-import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaRDD;
@@ -16,7 +12,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 public class JacobiAction extends ActionSupport {
 
@@ -29,7 +25,7 @@ public class JacobiAction extends ActionSupport {
     private Exception exception;
     private ArrayList<Long> timings = new ArrayList<>();
     private File file;
-    private ArrayList<Ortho.Threshold> serialThresholds = new ArrayList<>();
+    private ArrayList<Threshold> serialThresholds = new ArrayList<>();
 
     public String execute() throws IOException {
         SparkConf conf = new SparkConf().setAppName("Jacobi").setMaster("local[*]");
@@ -45,25 +41,30 @@ public class JacobiAction extends ActionSupport {
         file = new File(DownloadResultsAction.FILENAME);
         if (!file.exists()) {
             file.createNewFile();
+        }else{
+            file.delete();
+            file.createNewFile();
         }
         FileWriter fw = new FileWriter(file.getName());
         BufferedWriter bw = new BufferedWriter(fw);
         if(spark) {
-            ArrayList<Ortho.ThresholdSpark> thresholdSparks = new ArrayList<>();
+            ArrayList<Threshold> thresholdSparks = new ArrayList<>();
             for (int i = 0; i <= k; i++) {
-                thresholdSparks.add(new Ortho.ThresholdSpark(i));
+                Threshold threshold = new Threshold();
+                threshold.setK(k);
+                thresholdSparks.add(threshold);
             }
-            JavaRDD<Ortho.ThresholdSpark> thresholdSparkJavaRDD = jsc.parallelize(thresholdSparks);
+            JavaRDD<Threshold> thresholdSparkJavaRDD = jsc.parallelize(thresholdSparks);
             start = Instant.now().toEpochMilli();
-            Ortho.ThresholdSpark results = thresholdSparkJavaRDD.map(t -> jacobi.calc_dw_and_n(d, t.k, b, g))
-                    .reduce((result, next) -> (result.addResult(next)));
+            List<Threshold> result = thresholdSparkJavaRDD.map(threshold -> jacobi.getDwN(d, threshold.getK(), b, g)).collect();
+                    //.reduce((result, next) -> (result.addResult(next)));
 
             end = Instant.now().toEpochMilli();
 
-            for (Ortho.ThresholdSpark threshold : results.getRes()) {
-                bw.write("k = " + threshold.k + "\r\n");
-                for (int i = 0; i <= threshold.N; i++) {
-                    func = jacobi.val(threshold.k, b, g, threshold.dw * i);
+            for (Threshold threshold : result) {
+                bw.write("k = " + threshold.getK() + "\r\n");
+                for (int i = 0; i <= threshold.getN(); i++) {
+                    func = jacobi.val(threshold.getK(), b, g, threshold.getDw() * i);
                     bw.write((func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
                 }
             }
@@ -71,14 +72,14 @@ public class JacobiAction extends ActionSupport {
             start = Instant.now().toEpochMilli();
 
             for (int i=0;i<=k;i++){
-                serialThresholds.add(jacobi.calc_dw_and_n(d, i, b, g));
+                serialThresholds.add(jacobi.getDwN(d, i, b, g));
             }
             end = Instant.now().toEpochMilli();//stopWatch.stop();
 
             for (int i=0;i<=k;i++) {
                 bw.write("k = " + i+ "\r\n");
-                for (int j = 0; j <= serialThresholds.get(i).N; j++) {
-                    func = jacobi.val(k, b, g, serialThresholds.get(i).dw * j);
+                for (int j = 0; j <= serialThresholds.get(i).getN(); j++) {
+                    func = jacobi.val(k, b, g, serialThresholds.get(i).getDw() * j);
                     bw.write((func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
                 }
             }

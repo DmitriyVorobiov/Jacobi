@@ -113,8 +113,9 @@ public abstract class Ortho {
         return val <= d && val >= -d;
     }
 
-    public ThresholdSpark calc_dw_and_n(double d, int k, int b, double g) {
-        ThresholdSpark res = new ThresholdSpark(k);
+    public Threshold getDwN(double d, int k, int b, double g) {
+        Threshold res = new Threshold();
+        res.setK(k);
         double dw = 0.1;
         int i;
         double prev = val(k, b, g, 0).Re;
@@ -134,9 +135,9 @@ public abstract class Ortho {
             //if it`s eq. k or more, it means we don`t need to explore further
             //********************************
             sn_cur = sign(cur);
-            if (sn_prev != sn_cur) res.zero_cross_counter++;
+            if (sn_prev != sn_cur) res.setZeroCrossCounter(res.getZeroCrossCounter() + 1);
 
-            if (res.zero_cross_counter >= k && inCorridor(d, cur)) break;
+            if (res.getZeroCrossCounter() >= k && inCorridor(d, cur)) break;
 
             sn_prev = sn_cur;
             //********************************
@@ -157,35 +158,12 @@ public abstract class Ortho {
             //********************************
         }
 
-        res.dw = Math.sqrt((8 * d) / der2_max);
+        res.setDw(Math.sqrt((8 * d) / der2_max));
         double w_max = i * dw;
-        res.N = (int) Math.floor(w_max / res.dw + 0.5);
+        res.setN((int) Math.floor(w_max / res.getDw() + 0.5));
 
         return res;
     }
 
-    public static class Threshold implements Serializable{
-        public double dw = 0;
-        public int N = 0;
-        public int zero_cross_counter = 0;
-    }
 
-    public static class ThresholdSpark extends Threshold implements Serializable {
-        public int k;
-        private CopyOnWriteArrayList<ThresholdSpark> res;
-
-        public ThresholdSpark(int k) {
-            this.k = k;
-            res = new CopyOnWriteArrayList<>();
-        }
-
-        public ThresholdSpark addResult(ThresholdSpark t) {
-            res.add(t);
-            return this;
-        }
-
-        public CopyOnWriteArrayList<ThresholdSpark> getRes() {
-            return res;
-        }
-    }
 }
