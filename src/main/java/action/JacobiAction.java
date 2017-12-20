@@ -14,6 +14,7 @@ import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -28,53 +29,60 @@ public class JacobiAction extends ActionSupport {
     private Exception exception;
     private ArrayList<Long> timings = new ArrayList<>();
     private File file;
-    private static SparkConf conf = new SparkConf().setAppName("Jacobi").setMaster("local");
-    private static JavaSparkContext jsc = new JavaSparkContext(SparkContext.getOrCreate(conf));
-
+    private ArrayList<Ortho.Threshold> serialThresholds = new ArrayList<>();
 
     public String execute() throws IOException {
-        StopWatch stopWatch = new StopWatch();
+        SparkConf conf = new SparkConf().setAppName("Jacobi").setMaster("local[*]");
+        JavaSparkContext jsc = new JavaSparkContext(SparkContext.getOrCreate(conf));
         int k = Integer.valueOf(getK());
         int b = Integer.valueOf(getB());
         double g = Double.valueOf(getG());
         double d =Double.valueOf(getD());
+        long start = 0L,end = 0L;
         boolean spark = Boolean.parseBoolean(getSpark());
         Complex func;
-        Ortho jacobi;
-        if (spark)
-            jacobi = new Jacobi3Spark();
-        else
-            jacobi = new Jacobi3();
-        //TODO Нужно добавить параллеьное выполнение задач по К
-        //TODO MAP(K) FOREACH (K)->CALC REDUCE(DATA)
-        stopWatch.start();
-
-        ArrayList<Ortho.ThresholdSpark> thresholdSparks = new ArrayList<>();
-        for (int i = 0; i <= k; i++) {
-            thresholdSparks.add(new Ortho.ThresholdSpark(i));
-        }
-        JavaRDD<Ortho.ThresholdSpark> thresholdSparkJavaRDD = jsc.parallelize(thresholdSparks);
-        Ortho.ThresholdSpark results = thresholdSparkJavaRDD.map(t -> jacobi.calc_dw_and_n(d, t.k, b, g))
-            .reduce((result, next) -> (((Ortho.ThresholdSpark)result).addResult(next)));
-        //Ortho.Threshold data = jacobi.calc_dw_and_n(d,k, b,g);
-        stopWatch.stop();
-        file=  new File(DownloadResultsAction.FILENAME);
-        if (!file.exists()){
+        Ortho jacobi = new Jacobi3();
+        file = new File(DownloadResultsAction.FILENAME);
+        if (!file.exists()) {
             file.createNewFile();
         }
-        FileWriter fw =  new FileWriter(file.getName());
+        FileWriter fw = new FileWriter(file.getName());
         BufferedWriter bw = new BufferedWriter(fw);
-        /*for (int i = 0; i <= data.N; i++) {
-            func = jacobi.val(k, b, g, data.dw * i);
-            bw.write((func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
-        }*/
-
-        for (Ortho.ThresholdSpark threshold : results.getRes()) {
-            bw.write("k = "+threshold.k+"\r\n");
-            for (int i = 0; i <= threshold.N; i++) {
-                func = jacobi.val(threshold.k, b, g, threshold.dw * i);
-                bw.write((func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
+        if(spark) {
+            ArrayList<Ortho.ThresholdSpark> thresholdSparks = new ArrayList<>();
+            for (int i = 0; i <= k; i++) {
+                thresholdSparks.add(new Ortho.ThresholdSpark(i));
             }
+            JavaRDD<Ortho.ThresholdSpark> thresholdSparkJavaRDD = jsc.parallelize(thresholdSparks);
+            start = Instant.now().toEpochMilli();
+            Ortho.ThresholdSpark results = thresholdSparkJavaRDD.map(t -> jacobi.calc_dw_and_n(d, t.k, b, g))
+                    .reduce((result, next) -> (result.addResult(next)));
+
+            end = Instant.now().toEpochMilli();
+
+            for (Ortho.ThresholdSpark threshold : results.getRes()) {
+                bw.write("k = " + threshold.k + "\r\n");
+                for (int i = 0; i <= threshold.N; i++) {
+                    func = jacobi.val(threshold.k, b, g, threshold.dw * i);
+                    bw.write((func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
+                }
+            }
+        }else{
+            start = Instant.now().toEpochMilli();
+
+            for (int i=0;i<=k;i++){
+                serialThresholds.add(jacobi.calc_dw_and_n(d, i, b, g));
+            }
+            end = Instant.now().toEpochMilli();//stopWatch.stop();
+
+            for (int i=0;i<=k;i++) {
+                bw.write("k = " + i+ "\r\n");
+                for (int j = 0; j <= serialThresholds.get(i).N; j++) {
+                    func = jacobi.val(k, b, g, serialThresholds.get(i).dw * j);
+                    bw.write((func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
+                }
+            }
+
         }
 
         if (bw != null)
@@ -82,7 +90,7 @@ public class JacobiAction extends ActionSupport {
 
         if (fw != null)
             fw.close();
-        timings.add(stopWatch.getTime(TimeUnit.MILLISECONDS));
+        timings.add(end-start);
         return SUCCESS;
     }
 
