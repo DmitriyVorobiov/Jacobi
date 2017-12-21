@@ -22,9 +22,9 @@ public class JacobiAction extends ActionSupport {
     private String b;
     private String g;
     private String d;
-    private String spark;
+    private String algorithm;
     private Exception exception;
-    private ArrayList<Long> timings = new ArrayList<>();
+    private long timeSerial, timeParallel, timeTesting;
     private ArrayList<Threshold> serialThresholds = new ArrayList<>();
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -33,21 +33,58 @@ public class JacobiAction extends ActionSupport {
         int b = Integer.valueOf(getB());
         double g = Double.valueOf(getG());
         double d = Double.valueOf(getD());
-        File file;
+        File fileSerial, fileParallel;
         long start, end;
-        boolean spark = Boolean.parseBoolean(getSpark());
         Complex func;
-        Ortho jacobi = new Jacobi3();
-        file = new File(DownloadResultsAction.FILENAME);
-        if (!file.exists()) {
-            file.createNewFile();
-        } else {
-            file.delete();
-            file.createNewFile();
+        Ortho jacobi;
+        switch (algorithm) {
+            case "Jacobi1":
+                jacobi = new Jacobi1();
+                break;
+            case "Jacobi2":
+                jacobi = new Jacobi2();
+                break;
+            case "Jacobi3":
+            default:
+                jacobi = new Jacobi3();
+                break;
         }
-        FileWriter fw = new FileWriter(file.getName());
-        BufferedWriter bw = new BufferedWriter(fw);
-        if (spark) {
+        fileSerial = new File(DownloadResultsAction.FILENAME_SERIAL);
+        fileParallel = new File(DownloadResultsAction.FILENAME_PARALLEL);
+        if (!fileSerial.exists()) {
+            fileSerial.createNewFile();
+        } else {
+            fileSerial.delete();
+            fileSerial.createNewFile();
+        }
+        if (!fileParallel.exists()) {
+            fileParallel.createNewFile();
+        } else {
+            fileParallel.delete();
+            fileParallel.createNewFile();
+        }
+        BufferedWriter bws = new BufferedWriter(new FileWriter(fileSerial.getName()));
+        BufferedWriter bwp = new BufferedWriter(new FileWriter(fileParallel.getName()));
+        //serial code
+        {
+            start = Instant.now().toEpochMilli();
+
+            for (int i = 0; i <= k; i++) {
+                serialThresholds.add(jacobi.getDwN(d, i, b, g));
+            }
+            end = Instant.now().toEpochMilli();//stopWatch.stop();
+            timeSerial = end-start;
+            for (int i = 0; i <= k; i++) {
+                bws.write("k = " + i + "\r\n");
+                for (int j = 0; j <= serialThresholds.get(i).getN(); j++) {
+                    func = jacobi.val(k, b, g, serialThresholds.get(i).getDw() * j);
+                    bws.write((func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
+                }
+            }
+        }
+
+        //parallel code
+        {
             SparkConf conf = new SparkConf().setAppName("Jacobi").setMaster("local[*]");
             JavaSparkContext jsc = new JavaSparkContext(SparkContext.getOrCreate(conf));
             ArrayList<Threshold> thresholdSparks = new ArrayList<>();
@@ -58,40 +95,25 @@ public class JacobiAction extends ActionSupport {
             }
             JavaRDD<Threshold> thresholdSparkJavaRDD = jsc.parallelize(thresholdSparks);
             start = Instant.now().toEpochMilli();
+            //TODO: need to fix this. resulting list contains identical thresholds with k = kmax
             List<Threshold> result = thresholdSparkJavaRDD.map(threshold -> jacobi.getDwN(d, threshold.getK(), b, g)).collect();
             //.reduce((result, next) -> (result.addResult(next)));
 
             end = Instant.now().toEpochMilli();
-
+            jsc.stop();
+            timeParallel = end - start;
             for (Threshold threshold : result) {
-                bw.write("k = " + threshold.getK() + "\r\n");
+                bwp.write("k = " + threshold.getK() + "\r\n");
                 for (int i = 0; i <= threshold.getN(); i++) {
                     func = jacobi.val(threshold.getK(), b, g, threshold.getDw() * i);
-                    bw.write((func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
+                    bwp.write((func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
                 }
             }
-        } else {
-            start = Instant.now().toEpochMilli();
-
-            for (int i = 0; i <= k; i++) {
-                serialThresholds.add(jacobi.getDwN(d, i, b, g));
-            }
-            end = Instant.now().toEpochMilli();//stopWatch.stop();
-
-            for (int i = 0; i <= k; i++) {
-                bw.write("k = " + i + "\r\n");
-                for (int j = 0; j <= serialThresholds.get(i).getN(); j++) {
-                    func = jacobi.val(k, b, g, serialThresholds.get(i).getDw() * j);
-                    bw.write((func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
-                }
-            }
-
         }
 
-        bw.close();
-        fw.close();
+        bws.close();
+        bwp.close();
 
-        timings.add(end - start);
         return SUCCESS;
     }
 
@@ -132,14 +154,6 @@ public class JacobiAction extends ActionSupport {
         this.d = d;
     }
 
-    public String getSpark() {
-        return spark;
-    }
-
-    public void setSpark(String spark) {
-        this.spark = spark;
-    }
-
     public void setException(Exception exception) {
         this.exception = exception;
     }
@@ -148,11 +162,23 @@ public class JacobiAction extends ActionSupport {
         return exception;
     }
 
-    public ArrayList<Long> getTimings() {
-        return timings;
+    public long getTimeSerial() {
+        return timeSerial;
     }
 
-    public void setTimings(ArrayList<Long> timings) {
-        this.timings = timings;
+    public long getTimeParallel() {
+        return timeParallel;
+    }
+
+    public String getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(String algorithm) {
+        this.algorithm = algorithm;
+    }
+
+    public long getTimeTesting() {
+        return timeTesting;
     }
 }

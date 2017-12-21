@@ -156,7 +156,7 @@
     <s:textfield cssClass="input" type="text" label="b" name="b" value="1"/>
     <s:textfield cssClass="input" type="text" label="g" name="g" value="0.5"/>
     <s:select label="d" list="{'0.02','0.05','0.1','0.2'}" name="d"/>
-    <s:checkbox cssClass="input" type="checkbox" label="spark" name="spark" value="false"/>
+    <s:select label="Algorithm" list="{'Jacobi1','Jacobi2','Jacobi3'}" name="algorithm"/>
     <s:submit
             targets="result"
             value="Calculate"
@@ -166,8 +166,23 @@
 </s:form>
 
 <div id="result" class="semi-square">
-    <s:iterator value="timings"><s:label cssClass="text" value="Time,ms"/> <s:property/></s:iterator>
-    <s:a action="filedownload">RESULTS</s:a>
+    <center>
+    <s:label cssClass="text" value="Time serial,ms"/> <s:property value="timeSerial"/>
+    <s:form action="filedownload"
+            class="action.DownloadResultsAction" method="POST"
+            enctype="multipart/form-data">
+        <s:hidden name="fileName" value="results_ser.txt"></s:hidden>
+        <s:submit value="Serial results" cssClass="button"/>
+    </s:form></center>
+    <br><center>
+    <s:label cssClass="text" value="Time parallel,ms"/> <s:property value="timeParallel"/><br>
+    <s:form action="filedownload"
+            class="action.DownloadResultsAction" method="POST"
+            enctype="multipart/form-data">
+        <s:hidden name="fileName" value="results_par.txt"></s:hidden>
+        <s:submit value="Parallel results" cssClass="button"/>
+    </s:form>
+        </center>
 </div>
 </body>
 </html>

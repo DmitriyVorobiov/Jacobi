@@ -1,9 +1,11 @@
 package jacobi;
 
+import java.io.Serializable;
+
 /**
  * Created by Palladin on 28.11.2017.
  */
-public class Jacobi1 extends Ortho {
+public class Jacobi1 extends Ortho implements Serializable {
 
     public Complex val(int k, int b, double g, double w) {
         Complex prod = productionComplex(1, b, p ->

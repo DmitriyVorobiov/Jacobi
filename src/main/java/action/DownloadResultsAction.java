@@ -9,7 +9,8 @@ import java.io.InputStream;
 public class DownloadResultsAction extends ActionSupport {
 
 
-    public static final String FILENAME=  "results.txt";
+    public static final String FILENAME_SERIAL=  "results_ser.txt";
+    public static final String FILENAME_PARALLEL=  "results_par.txt";
 
     private InputStream fileInputStream;
     // Used to set file name dynamically
@@ -22,7 +23,7 @@ public class DownloadResultsAction extends ActionSupport {
 
     public String execute() throws Exception
     {
-        File fileToDownload = new File(FILENAME);
+        File fileToDownload = new File(fileName);
         fileName = fileToDownload.getName();
         fileInputStream = new FileInputStream(fileToDownload);
         return SUCCESS;
@@ -30,7 +31,18 @@ public class DownloadResultsAction extends ActionSupport {
 
     public String getFileName()
     {
-        return FILENAME;
+        return fileName;
     }
 
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public static String getFilenameSerial() {
+        return FILENAME_SERIAL;
+    }
+
+    public static String getFilenameParallel() {
+        return FILENAME_PARALLEL;
+    }
 }
