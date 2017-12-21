@@ -5,6 +5,7 @@ import jacobi.*;
 import java.io.*;
 
 import com.opensymphony.xwork2.ActionSupport;
+import org.apache.logging.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaRDD;
@@ -77,7 +78,7 @@ public class JacobiAction extends ActionSupport {
             for (int i = 0; i <= k; i++) {
                 bws.write("k = " + i + "\r\n");
                 for (int j = 0; j <= serialThresholds.get(i).getN(); j++) {
-                    func = jacobi.val(k, b, g, serialThresholds.get(i).getDw() * j);
+                    func = jacobi.val(serialThresholds.get(i).getK(), b, g, serialThresholds.get(i).getDw() * j);
                     bws.write((func.Re + "; " + func.Im + ";\r\n").replace('.', ','));
                 }
             }
@@ -90,16 +91,21 @@ public class JacobiAction extends ActionSupport {
             ArrayList<Threshold> thresholdSparks = new ArrayList<>();
             for (int i = 0; i <= k; i++) {
                 Threshold threshold = new Threshold();
-                threshold.setK(k);
+                threshold.setK(i);
                 thresholdSparks.add(threshold);
             }
             JavaRDD<Threshold> thresholdSparkJavaRDD = jsc.parallelize(thresholdSparks);
             start = Instant.now().toEpochMilli();
-            //TODO: need to fix this. resulting list contains identical thresholds with k = kmax
             List<Threshold> result = thresholdSparkJavaRDD.map(threshold -> jacobi.getDwN(d, threshold.getK(), b, g)).collect();
             //.reduce((result, next) -> (result.addResult(next)));
 
             end = Instant.now().toEpochMilli();
+
+            for (int i = 0; i < serialThresholds.size(); i++) {
+                if (!serialThresholds.get(i).isEqualTo(result.get(i)))
+                    org.apache.log4j.Logger.getRootLogger().error("Pair # "+i+" is not equal");
+            }
+
             jsc.stop();
             timeParallel = end - start;
             for (Threshold threshold : result) {

@@ -39,4 +39,8 @@ public class Threshold implements Serializable {
     public void setK(int k) {
         this.k = k;
     }
+
+    public boolean isEqualTo(Threshold o) {
+        return (dw == o.dw) && (N == o.N) && (zeroCrossCounter == o.zeroCrossCounter) && (k == o.k);
+    }
 }
