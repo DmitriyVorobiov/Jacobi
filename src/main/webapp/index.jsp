@@ -156,7 +156,7 @@
     <s:textfield cssClass="input" type="text" label="b" name="b" value="1"/>
     <s:textfield cssClass="input" type="text" label="g" name="g" value="0.5"/>
     <s:select label="d" list="{'0.02','0.05','0.1','0.2'}" name="d"/>
-    <s:select label="Algorithm" list="{'Jacobi1','Jacobi2','Jacobi3'}" name="algorithm"/>
+    <s:select label="Algorithm" list="{'Jacobi1','Jacobi2','Jacobi3'}" name="algoName"/>
     <s:submit
             targets="result"
             value="Calculate"

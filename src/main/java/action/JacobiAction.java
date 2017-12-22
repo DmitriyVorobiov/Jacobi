@@ -5,7 +5,6 @@ import jacobi.*;
 import java.io.*;
 
 import com.opensymphony.xwork2.ActionSupport;
-import org.apache.logging.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaRDD;
@@ -23,7 +22,7 @@ public class JacobiAction extends ActionSupport {
     private String b;
     private String g;
     private String d;
-    private String algorithm;
+    private String algoName;
     private Exception exception;
     private long timeSerial, timeParallel, timeTesting;
     private ArrayList<Threshold> serialThresholds = new ArrayList<>();
@@ -37,18 +36,11 @@ public class JacobiAction extends ActionSupport {
         File fileSerial, fileParallel;
         long start, end;
         Complex func;
-        Ortho jacobi;
-        switch (algorithm) {
-            case "Jacobi1":
-                jacobi = new Jacobi1();
-                break;
-            case "Jacobi2":
-                jacobi = new Jacobi2();
-                break;
-            case "Jacobi3":
-            default:
-                jacobi = new Jacobi3();
-                break;
+        Ortho jacobi = null;
+        try {
+            jacobi = (Ortho)Class.forName(algoName).newInstance();
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            e.printStackTrace();
         }
         fileSerial = new File(DownloadResultsAction.FILENAME_SERIAL);
         fileParallel = new File(DownloadResultsAction.FILENAME_PARALLEL);
@@ -96,7 +88,8 @@ public class JacobiAction extends ActionSupport {
             }
             JavaRDD<Threshold> thresholdSparkJavaRDD = jsc.parallelize(thresholdSparks);
             start = Instant.now().toEpochMilli();
-            List<Threshold> result = thresholdSparkJavaRDD.map(threshold -> jacobi.getDwN(d, threshold.getK(), b, g)).collect();
+            final Ortho mappedJacobi = jacobi;
+            List<Threshold> result = thresholdSparkJavaRDD.map(threshold -> mappedJacobi.getDwN(d, threshold.getK(), b, g)).collect();
             //.reduce((result, next) -> (result.addResult(next)));
 
             end = Instant.now().toEpochMilli();
@@ -176,12 +169,12 @@ public class JacobiAction extends ActionSupport {
         return timeParallel;
     }
 
-    public String getAlgorithm() {
-        return algorithm;
+    public String getAlgoName() {
+        return algoName;
     }
 
-    public void setAlgorithm(String algorithm) {
-        this.algorithm = algorithm;
+    public void setAlgoName(String algoName) {
+        this.algoName = algoName;
     }
 
     public long getTimeTesting() {
