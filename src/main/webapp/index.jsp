@@ -142,10 +142,6 @@
 </head>
 <body class="body">
 
-<s:url action="JacobiAction"> </s:url>
-<s:url action="filedownload"> </s:url>
-
-
 <br>
 
 <s:form action="JacobiAction"
