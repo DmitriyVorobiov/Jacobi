@@ -149,8 +149,8 @@
         enctype="multipart/form-data">
     <s:property value="exception"/>
     <s:textfield cssClass="input" type="text" label="k" name="k" value="6"/>
-    <s:textfield cssClass="input" type="text" label="b" name="b" value="1"/>
-    <s:textfield cssClass="input" type="text" label="g" name="g" value="0.5"/>
+    <s:textfield cssClass="input" type="text" label="b" name="b" value="2"/>
+    <s:textfield cssClass="input" type="text" label="g" name="g" value="1"/>
     <s:select label="d" list="{'0.02','0.05','0.1','0.2'}" name="d"/>
     <s:select label="Algorithm" list="{'Jacobi1','Jacobi2','Jacobi3'}" name="algoName"/>
     <s:submit
@@ -177,6 +177,14 @@
             enctype="multipart/form-data">
         <s:hidden name="fileName" value="results_par.txt"></s:hidden>
         <s:submit value="Parallel results" cssClass="button"/>
+    </s:form>
+
+    <s:label cssClass="text" value="Time test,ms"/> <s:property value="timeTesting"/><br>
+    <s:form action="filedownload"
+            class="action.DownloadResultsAction" method="POST"
+            enctype="multipart/form-data">
+        <s:hidden name="fileName" value="results_test.txt"></s:hidden>
+        <s:submit value="Test results" cssClass="button"/>
     </s:form>
         </center>
 </div>

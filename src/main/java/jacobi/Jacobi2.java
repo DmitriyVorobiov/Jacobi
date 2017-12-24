@@ -1,24 +1,25 @@
 package jacobi;
 
-import java.io.Serializable;
 
 /**
  * Created by Palladin on 28.11.2017.
  */
-public class Jacobi2 extends Ortho implements Serializable {
+public class Jacobi2 extends Ortho
+{
 
-    public Complex val(int k, int b, double g, double w) {
-        Complex prod = productionComplex(0, b, p ->
-                new Complex((2 * (k + p) + 1) * c * g / 2, w));
-
-
-        if (k == 0) return new Complex(Math.pow(c * g, b + 1) * fact(b + 1)).div(prod);
-
-        Complex res = new Complex(Math.pow(c * g, b + 1) * (2 * k + b + 1) * fact(k + b, k)).div(prod);
+    public Complex val(double w) {
+      Complex prod = productionComplex(0, getB(), p ->
+                new Complex((2*(getK() + p) + 1)*C*getG()/2, w));
 
 
-        return res.mult(productionComplex(0, k - 1, s -> {
-            Complex numerator = new Complex((2 * s + 1) * c * g / 2, -w);
+
+        if(getK() == 0) return new Complex( Math.pow(C*getG(), getB()+1) * fact(getB()+1)).div(prod);
+
+        Complex res = new Complex(Math.pow(C*getG(), getB()+1) * (2*getK() + getB() + 1) * fact(getK() + getB(), getK())).div(prod);
+
+
+        return res.mult(productionComplex(0, getK()-1, s -> {
+            Complex numerator = new Complex((2*s + 1)*C*getG()/2, -w);
             Complex denominator = numerator.conjugate();
             return numerator.div(denominator);
         }));

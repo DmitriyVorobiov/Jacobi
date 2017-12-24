@@ -11,6 +11,8 @@ public class DownloadResultsAction extends ActionSupport {
 
     public static final String FILENAME_SERIAL=  "results_ser.txt";
     public static final String FILENAME_PARALLEL=  "results_par.txt";
+    public static final String FILENAME_TEST=  "results_test.txt";
+
 
     private InputStream fileInputStream;
     // Used to set file name dynamically

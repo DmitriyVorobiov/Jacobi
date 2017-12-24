@@ -86,7 +86,7 @@ public class Complex {
         return new Complex(Re, -Im);
     }
 
-    // return a new jacobi.Complex object whose value is the reciprocal of this
+    // return a new TheMath.Complex object whose value is the reciprocal of this
     public Complex reciprocal() {
         double scale = Re * Re + Im * Im;
         return new Complex(Re / scale, -Im / scale);
@@ -95,6 +95,16 @@ public class Complex {
     // return a / b
     public Complex div(Complex b) {
         return mult(b.reciprocal());
+//        Complex res = new Complex();
+//
+//        double denominator = b.Re + b.Im * b.Im / b.Re;
+//        res.Re = (Re / denominator) + ((Im * b.Im / b.Re) / denominator);
+//
+//        denominator = b.Re * b.Re / b.Im + b.Re;
+//
+//        res.Im = ((b.Re*Im)/b.Im) / denominator - Re / denominator;
+//
+//        return res;
     }
 
     public Complex div(double num) {
@@ -114,23 +124,23 @@ public class Complex {
         Im /= num;
     }
 
-    // return a new jacobi.Complex object whose value is the complex exponential of this
+    // return a new TheMath.Complex object whose value is the complex exponential of this
     public static Complex exp(Complex c) {
         return new Complex(Math.exp(c.Re) * Math.cos(c.Im), Math.exp(c.Re) * Math.sin(c.Im));
     }
 
-    // return a new jacobi.Complex object whose value is the complex sine of this
+    // return a new TheMath.Complex object whose value is the complex sine of this
     public static Complex sin(Complex c) {
         return new Complex(Math.sin(c.Re) * Math.cosh(c.Im), Math.cos(c.Re) * Math.sinh(c.Im));
     }
 
 
-    // return a new jacobi.Complex object whose value is the complex cosine of this
+    // return a new TheMath.Complex object whose value is the complex cosine of this
     public static Complex cos(Complex c) {
         return new Complex(Math.cos(c.Re) * Math.cosh(c.Im), -Math.sin(c.Re) * Math.sinh(c.Im));
     }
 
-    // return a new jacobi.Complex object whose value is the complex tangent of this
+    // return a new TheMath.Complex object whose value is the complex tangent of this
     public static Complex tan(Complex c) {
         return sin(c).div(cos(c));
     }
@@ -155,7 +165,14 @@ public class Complex {
         if (x == null) return false;
         if (this.getClass() != x.getClass()) return false;
         Complex that = (Complex) x;
-        return (this.Re == that.Re) && (this.Im == that.Im);
+        double roundedReThis = Math.rint(100.0 * this.Re) / 100.0;
+        double roundedReThat = Math.rint(100.0 * that.Re) / 100.0;
+        double roundedImThis = Math.rint(100.0 * this.Im) / 100.0;
+        double roundedImThat = Math.rint(100.0 * that.Im) / 100.0;
+        if ((roundedReThis != roundedReThat) || (roundedImThis != roundedImThat)){
+            System.out.println("OOPS!");
+        }
+        return (roundedReThis == roundedReThat) && (roundedImThis == roundedImThat);
     }
 
     // See Section 3.3.
