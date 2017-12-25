@@ -1,8 +1,6 @@
 package jacobi;
 
 
-import com.sun.istack.internal.Nullable;
-
 import java.io.Serializable;
 import java.util.function.Function;
 
@@ -16,7 +14,6 @@ public abstract class Ortho implements Serializable {
     private int b = 2;
     private double g = 1;
 
-    @Nullable
     public Double fact(int numerator, int denominator)
     {
         if(numerator < 0 || denominator < 0) return null;
@@ -60,13 +57,11 @@ public abstract class Ortho implements Serializable {
         this.b = b;
     }
 
-    @Nullable
     public Double fact(int num)
     {
         return fact(num, 1);
     }
 
-    @Nullable
     protected Double combinations(int k, int s)
     {
         Double res;
