@@ -199,7 +199,6 @@ public class JacobiAction extends ActionSupport {
 
     private long startTests() throws IllegalAccessException, InstantiationException, ClassNotFoundException, IOException, TestException {
         long start, end;
-        final int k = 6;
         final int b = 2;
         final int g = 1;
         final double d = 0.02;
@@ -209,17 +208,22 @@ public class JacobiAction extends ActionSupport {
         start = Instant.now().toEpochMilli();
         testFile = new File(DownloadResultsAction.FILENAME_TEST);
         BufferedWriter bufferedWriterTest = new BufferedWriter(new FileWriter(testFile.getName()));
-        Jacobi1 jacobi1 = new Jacobi1();
-        jacobi1.setB(b);
-        jacobi1.setG(g);
+        Ortho jacobi= null;
+        try {
+            jacobi = (Ortho) Class.forName("jacobi." + algoName).newInstance();
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        jacobi.setB(b);
+        jacobi.setG(g);
         for (int i = 0; i <= 5; i++) {
             SpecialCase specialCase = SpecialCaseFactory.createSpecialCase(i);
             specialCase.setK(i);
             specialCase.setG(g);
             specialCase.setB(b);
-            jacobi1.setK(i);
+            jacobi.setK(i);
             Threshold testThreshold = specialCase.getDwN(d);
-            Threshold jacobiThreshold = jacobi1.getDwN(d);
+            Threshold jacobiThreshold = jacobi.getDwN(d);
             if (!testFile.exists()) {
                 testFile.createNewFile();
             } else {
@@ -229,10 +233,8 @@ public class JacobiAction extends ActionSupport {
             bufferedWriterTest.write("order= " + i + "\r\n");
 
             for (int j = 0; j <= testThreshold.getN(); j++) {
-                //TODO there is error in second special case. Have to be fixed
-                if(i==2) continue;
                 testFunc = specialCase.val(testThreshold.getDw() * j);
-                jacobiFunc = jacobi1.val(jacobiThreshold.getDw() * j);
+                jacobiFunc = jacobi.val(jacobiThreshold.getDw() * j);
                 if (!testFunc.equals(jacobiFunc)) {
                     bufferedWriterTest.close();
                     throw TestException.build(j);

@@ -14,7 +14,7 @@ class SpecialCase2 extends SpecialCase
     {
         Complex prod = productionComplex(0, getB(), p -> new Complex((2* p + 5)*C*getG()/2, w));
 
-        Complex res = new Complex(fact(getB() + 2) * (getB() + 5) * Math.pow(C*getB(), getB()+1));
+        Complex res = new Complex(fact(getB() + 2) * (getB() + 5) * Math.pow(C*getG(), getB()+1));
 
         Complex numerator = new Complex(C*getG()/2, -w);
 
